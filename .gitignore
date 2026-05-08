@@ -1,0 +1,18 @@
+# Ignore everything by default
+*
+
+# Keep our modified files and tooling
+!.gitignore
+!README.md
+!patch.py
+!conf.lua
+!game.lua
+!globals.lua
+!main.lua
+
+# Keep only our modified functions (not misc/state/test)
+!functions/
+functions/*
+!functions/common_events.lua
+!functions/UI_definitions.lua
+!functions/button_callbacks.lua
