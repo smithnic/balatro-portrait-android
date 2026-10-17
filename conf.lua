@@ -9,5 +9,7 @@ function love.conf(t)
 	t.window.height = 912
 	t.window.minwidth = 100
 	t.window.minheight = 100
-	t.window.resizable = true
+	-- On Android/iOS, SDL locks orientation from the window: non-resizable + w<h = portrait only.
+	-- A resizable window lets the device rotate freely into landscape, which this layout doesn't support.
+	t.window.resizable = not (love._os == 'Android' or love._os == 'iOS')
 end

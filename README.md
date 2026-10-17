@@ -10,28 +10,40 @@ An unofficial portrait-mode mod for Balatro on Android.
 - Scales cards, jokers, and consumables for comfortable one-handed phone use
 - Repositions the hand, play area, deck, and UI panels to fit a tall screen
 - Tuned for a 412×912 dp screen (e.g. Samsung Galaxy S23 series) but works on similar Android phones
-
-## Known Issues
-
-- Rotating into landscape mode currently still uses the portrait layout so the interface becomes too small
+- Locks the device to portrait (auto-rotate won't flip it into landscape)
 
 ## Prerequisites
 
 - Balatro installed via Steam on Windows
 - Python 3.6 or later
-- [balatro-mobile-maker](https://github.com/blake502/balatro-mobile-maker)
+- [balatro-mobile-maker](https://github.com/blake502/balatro-mobile-maker), in a folder on a Windows drive
+- `adb` from Android SDK platform-tools (under WSL, `adb.exe` on `PATH`)
 
-## Build steps
+## Build (WSL)
+
+`build.sh` runs the whole pipeline: it patches the exe, stages it in mobile-maker's folder as `Balatro.exe`, runs `balatro-mobile-maker.exe`, copies `balatro.apk` back here, and installs it with `adb.exe`:
+
+```
+export MOBILE_MAKER_DIR="/mnt/c/path/to/balatro-mobile-maker"
+./build.sh
+```
+
+- `--balatro PATH`: use a Balatro.exe other than the default Steam install
+- `--no-install`: build only, don't run `adb.exe install`
+
+mobile-maker is interactive. Answer **yes** to building for Android, **No** to the landscape orientation patch, and **No** to its automatic install, since the script installs afterwards.
+
+## Build (manual)
 
 ### 1. Patch the exe
 
 Run the patcher from this repo's directory:
 
 ```
-python patch.py
+python patch.py        # python3 under WSL
 ```
 
-This reads `Balatro.exe` from the default Steam path and writes `Balatro-portrait.exe` next to it.
+This reads `Balatro.exe` from the default Steam path (`C:\Program Files (x86)\...` on Windows, `/mnt/c/Program Files (x86)/...` under WSL) and writes `Balatro-portrait.exe` next to it.
 
 If Balatro is installed somewhere else, pass the path explicitly:
 
@@ -46,7 +58,7 @@ python patch.py "D:\Steam\steamapps\common\Balatro\Balatro.exe"
 
 ### 3. Run balatro-mobile-maker
 
-Run `balatro-mobile-maker.exe`. When it asks whether to apply the **landscape patch**, choose **No** — the portrait mod already handles orientation.
+Run `balatro-mobile-maker.exe`. When it asks whether to apply the **landscape patch**, choose **No**. The mod handles orientation itself (portrait lock), and the patch's search text no longer exists in this mod's files, so it would have no effect anyway.
 
 ### 4. Install the APK
 
@@ -54,12 +66,16 @@ Run `balatro-mobile-maker.exe`. When it asks whether to apply the **landscape pa
 adb install balatro.apk
 ```
 
-If a previous version is already installed (install will fail with a signature error):
+(Under WSL, use `adb.exe`.) If a previous version is already installed, the install fails with a signature error. Uninstalling **deletes the app's saves**, so back them up first:
 
 ```
 adb uninstall com.unofficial.balatro
 adb install balatro.apk
 ```
+
+## How the portrait lock works
+
+On Android, LÖVE/SDL picks the screen orientation from the window settings at runtime, overriding the APK manifest. A resizable window allows any rotation. A non-resizable window is locked to portrait or landscape depending on whether its width is less than its height. `conf.lua` and `G.FUNCS.apply_window_changes` (`functions/button_callbacks.lua`) make the window non-resizable on Android/iOS and always pass portrait dimensions.
 
 ## Legal
 

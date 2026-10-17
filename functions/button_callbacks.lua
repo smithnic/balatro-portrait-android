@@ -1171,13 +1171,21 @@ G.FUNCS.apply_window_changes = function(_initial)
   --Set the vsync value, 0 is off 1 is on
   G.SETTINGS.WINDOW.vsync = (G.SETTINGS.QUEUED_CHANGE and G.SETTINGS.QUEUED_CHANGE.vsync) or G.SETTINGS.WINDOW.vsync or 1
 
+  local window_w = (G.SETTINGS.QUEUED_CHANGE and G.SETTINGS.QUEUED_CHANGE.screenmode == 'Windowed') and love.graphics.getWidth()*0.8 or G.SETTINGS.WINDOW.DISPLAYS[G.SETTINGS.WINDOW.selected_display].screen_res.w
+  local window_h = (G.SETTINGS.QUEUED_CHANGE and G.SETTINGS.QUEUED_CHANGE.screenmode == 'Windowed') and love.graphics.getHeight()*0.8 or G.SETTINGS.WINDOW.DISPLAYS[G.SETTINGS.WINDOW.selected_display].screen_res.h
+
+  --portrait mode: on mobile SDL locks orientation from these values (non-resizable + w<h = portrait only).
+  --The surface may still be landscape at startup (manifest says landscape), so force w<h or we'd lock to landscape.
+  local is_mobile = love.system.getOS() == 'Android' or love.system.getOS() == 'iOS'
+  if is_mobile and window_w > window_h then window_w, window_h = window_h, window_w end
+
   love.window.updateMode(
-    (G.SETTINGS.QUEUED_CHANGE and G.SETTINGS.QUEUED_CHANGE.screenmode == 'Windowed') and love.graphics.getWidth()*0.8 or G.SETTINGS.WINDOW.DISPLAYS[G.SETTINGS.WINDOW.selected_display].screen_res.w,
-    (G.SETTINGS.QUEUED_CHANGE and G.SETTINGS.QUEUED_CHANGE.screenmode == 'Windowed') and love.graphics.getHeight()*0.8 or G.SETTINGS.WINDOW.DISPLAYS[G.SETTINGS.WINDOW.selected_display].screen_res.h,
+    window_w,
+    window_h,
     {fullscreen = G.SETTINGS.WINDOW.screenmode ~= 'Windowed',
     fullscreentype = (G.SETTINGS.WINDOW.screenmode == 'Borderless' and 'desktop') or (G.SETTINGS.WINDOW.screenmode == 'Fullscreen' and 'exclusive') or nil,
     vsync = G.SETTINGS.WINDOW.vsync,
-    resizable = true,
+    resizable = not is_mobile,
     display = G.SETTINGS.WINDOW.selected_display,
     highdpi = (love.system.getOS() == 'OS X')
     })

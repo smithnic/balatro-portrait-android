@@ -3,8 +3,10 @@
 
 # Keep our modified files and tooling
 !.gitignore
+!.gitattributes
 !README.md
 !patch.py
+!build.sh
 !conf.lua
 !game.lua
 !globals.lua

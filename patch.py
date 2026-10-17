@@ -6,7 +6,7 @@ Injects portrait-mode Lua modifications into Balatro.exe.
 The patched exe can then be passed to balatro-mobile-maker to build an APK.
 
 Usage:
-    python patch.py                          # uses default Steam path
+    python patch.py                          # uses default Steam path (Windows or WSL)
     python patch.py "C:/path/to/Balatro.exe"
     python patch.py "C:/path/to/Balatro.exe" -o patched.exe
 """
@@ -31,9 +31,19 @@ PATCHED_FILES = [
     "functions/button_callbacks.lua",
 ]
 
-DEFAULT_BALATRO_PATH = (
-    r"C:\Program Files (x86)\Steam\steamapps\common\Balatro\Balatro.exe"
-)
+# Default Steam install locations, checked in order (native Windows, then WSL)
+DEFAULT_BALATRO_PATHS = [
+    r"C:\Program Files (x86)\Steam\steamapps\common\Balatro\Balatro.exe",
+    "/mnt/c/Program Files (x86)/Steam/steamapps/common/Balatro/Balatro.exe",
+]
+
+
+def default_balatro_path() -> str:
+    """Return the first default Steam path that exists, or the first candidate if none do."""
+    for p in DEFAULT_BALATRO_PATHS:
+        if Path(p).exists():
+            return p
+    return DEFAULT_BALATRO_PATHS[0]
 
 
 def find_zip_start(data: bytes) -> int:
@@ -123,8 +133,9 @@ def main() -> int:
     parser.add_argument(
         "input",
         nargs="?",
-        default=DEFAULT_BALATRO_PATH,
-        help=f"Path to original Balatro.exe (default: {DEFAULT_BALATRO_PATH})",
+        default=None,
+        help="Path to original Balatro.exe (default: first existing of "
+        + ", ".join(DEFAULT_BALATRO_PATHS) + ")",
     )
     parser.add_argument(
         "-o", "--output",
@@ -133,13 +144,17 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    input_path = Path(args.input)
+    input_path = Path(args.input or default_balatro_path())
     output_path = Path(args.output)
     if not output_path.is_absolute():
         output_path = SCRIPT_DIR / output_path
 
     if not input_path.exists():
         print(f"ERROR: Input not found: {input_path}")
+        if args.input is None:
+            print("Checked default Steam locations:")
+            for p in DEFAULT_BALATRO_PATHS:
+                print(f"  {p}")
         print("Pass the path to Balatro.exe as the first argument.")
         return 1
 
