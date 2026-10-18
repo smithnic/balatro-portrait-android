@@ -13,6 +13,7 @@ An unofficial portrait-mode mod for Balatro on Android.
 - Stretches the play area to the phone's aspect ratio, so tall screens are filled edge to edge
 - Keeps card tooltips on screen for cards near the edges
 - Locks the device to portrait (auto-rotate won't flip it into landscape)
+- Caps the frame rate at 60 fps on mobile to keep the phone cool
 
 ## Prerequisites
 
@@ -33,7 +34,7 @@ export MOBILE_MAKER_DIR="/mnt/c/path/to/balatro-mobile-maker"
 - `--balatro PATH`: use a Balatro.exe other than the default Steam install
 - `--no-install`: build only, don't run `adb.exe install`
 
-mobile-maker is interactive. Answer **yes** to building for Android, **No** to the landscape orientation patch, and **No** to its automatic install, since the script installs afterwards.
+mobile-maker is interactive. Answer **yes** to building for Android, **No** to the FPS cap patch (see below), **No** to the landscape orientation patch, and **No** to its automatic install, since the script installs afterwards.
 
 ## Build (manual)
 
@@ -61,6 +62,8 @@ python patch.py "D:\Steam\steamapps\common\Balatro\Balatro.exe"
 ### 3. Run balatro-mobile-maker
 
 Run `balatro-mobile-maker.exe`. When it asks whether to apply the **landscape patch**, choose **No**. The mod handles orientation itself (portrait lock), and the patch's search text no longer exists in this mod's files, so it would have no effect anyway.
+
+You can answer **No** to the **FPS cap patch** too. The mod already caps mobile at 60 fps in `love.run` (`main.lua`). Without a cap the game renders flat out, because Android doesn't reliably honour vsync, and the phone gets hot. Answering yes replaces the cap with the value you enter there, or with the display's refresh rate if you leave it blank.
 
 ### 4. Install the APK
 

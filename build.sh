@@ -69,6 +69,7 @@ fi
 echo
 echo "==> Running balatro-mobile-maker"
 echo "    - Build for Android: yes"
+echo "    - FPS cap patch: NO (the mod caps mobile at 60 fps itself; yes overrides that)"
 echo "    - Landscape orientation patch: NO (it has no effect on this mod anyway)"
 if [[ $install -eq 1 ]]; then
     echo "    - Automatically install: NO (this script installs afterwards)"

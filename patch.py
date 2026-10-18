@@ -128,6 +128,7 @@ def patch(input_path: Path, output_path: Path) -> None:
     print()
     print("Next step: run balatro-mobile-maker pointing at this patched exe.")
     print("  NOTE: when balatro-mobile-maker asks to apply the landscape patch, say NO.")
+    print("        Its FPS cap patch is optional: the mod already caps mobile at 60 fps.")
 
 
 def main() -> int:

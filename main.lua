@@ -78,7 +78,9 @@ function love.run()
 		end
 
 		run_time = math.min(love.timer.getTime() - run_time, 0.1)
-		G.FPS_CAP = G.FPS_CAP or 500
+		--portrait mode: cap mobile at 60fps. Vsync isn't reliably honoured there, so the stock 500 cap
+		--renders flat out and heats the phone. mobile-maker's optional FPS cap patch still overrides this line.
+		G.FPS_CAP = G.FPS_CAP or ((love.system.getOS() == 'Android' or love.system.getOS() == 'iOS') and 60) or 500
 		if run_time < 1./G.FPS_CAP then love.timer.sleep(1./G.FPS_CAP - run_time) end
 	end
 end
