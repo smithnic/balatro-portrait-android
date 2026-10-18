@@ -1119,7 +1119,7 @@ end
       end
 
       return {n=G.UIT.ROOT, config = {align = 'cm', colour = G.C.CLEAR}, nodes={
-        {n=G.UIT.C, config={align = "cm", func = 'show_infotip',object = Moveable(),ref_table = next(info_boxes) and info_boxes or nil}, nodes={
+        {n=G.UIT.C, config={align = "cm", func = 'show_infotip',object = Moveable(),ref_table = next(info_boxes) and info_boxes or nil, info_align = (card.T.x + card.T.w/2 < G.ROOM.T.w/2) and 'cr' or 'cl'}, nodes={  -- portrait: info boxes go on the side with more room
           {n=G.UIT.R, config={padding = outer_padding, r = 0.12, colour = lighten(G.C.JOKER_GREY, 0.5), emboss = 0.07}, nodes={
             {n=G.UIT.R, config={align = "cm", padding = 0.07, r = 0.1, colour = adjust_alpha(card_type_background, 0.8)}, nodes={
               name_from_rows(AUT.name, is_playing_card and G.C.WHITE or nil),

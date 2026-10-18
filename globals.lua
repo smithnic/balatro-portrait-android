@@ -271,8 +271,8 @@ function Game:set_globals()
     self.TILE_W = 11.5   -- portrait: was 20 (swapped)
     self.TILE_H = 20     -- portrait: was 11.5 (swapped)
     self.DRAW_HASH_BUFF = 2
-    self.CARD_W = 2.0*35/41  -- portrait: was 1.75*35/41
-    self.CARD_H = 2.0*47/41  -- portrait: was 1.75*47/41
+    self.CARD_W = 2.2*35/41  -- portrait: was 2.4*35/41 (in a 20-wide room)
+    self.CARD_H = 2.2*47/41  -- portrait: was 2.4*47/41 (in a 20-wide room)
     self.HIGHLIGHT_H = 0.2*self.CARD_H
     self.COLLISION_BUFFER = 0.2
 

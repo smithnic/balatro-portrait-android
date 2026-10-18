@@ -1,3 +1,9 @@
+--portrait: the hand shares the bottom row with the deck, so it sits left of centre. UI boxes aligned to
+--G.hand (blind select, shop, cash out) use this x offset to centre on the room instead.
+function room_centre_offset_x()
+    return G.TILE_W/2 - (G.hand.T.x + G.hand.T.w/2)
+end
+
 function set_screen_positions()
     if G.STAGE == G.STAGES.RUN then
         -- PORTRAIT LAYOUT
@@ -18,9 +24,10 @@ function set_screen_positions()
         G.deck.T.x = hand_deck_x + G.hand.T.w + 0.1
         G.deck.T.y = G.hand.T.y
 
-        -- Play area centred above hand
+        -- Play area centred in the gap between the joker row and the hand
+        -- (the room is taller on long phones, so a fixed offset above the hand leaves a dead gap)
         G.play.T.x = (G.TILE_W - G.play.T.w) / 2
-        G.play.T.y = G.hand.T.y - 3.5
+        G.play.T.y = (G.jokers.T.y + G.jokers.T.h + G.hand.T.y - G.play.T.h) / 2
 
         -- Discard off-screen to the right (cards fly there and vanish)
         G.discard.T.x = G.TILE_W + 5
@@ -932,6 +939,13 @@ function card_eval_status_text(card, eval_type, amt, percent, dir, extra)
     end
 end
 
+--Adding rows can widen the cash out box, but a 'm' aligned box is only re-centred when its offset changes,
+--so it grew to the right and then jumped back when it next moved. Force a re-centre after each add.
+local function round_eval_add_child(node, parent)
+    G.round_eval:add_child(node, parent)
+    G.round_eval.alignment.prev_type = ''
+end
+
 function add_round_eval_row(config)
     local config = config or {}
     local width = G.round_eval.T.w - 0.51
@@ -947,7 +961,7 @@ function add_round_eval_row(config)
                         local spacer = {n=G.UIT.R, config={align = "cm", minw = width}, nodes={
                             {n=G.UIT.O, config={object = DynaText({string = {'......................................'}, colours = {G.C.WHITE},shadow = true, float = true, y_offset = -30, scale = 0.45, spacing = 13.5, font = G.LANGUAGES['en-us'].font, pop_in = 0, maxw = width})}}
                         }}
-                        G.round_eval:add_child(spacer,G.round_eval:get_UIE_by_ID(config.bonus and 'bonus_round_eval' or 'base_round_eval'))
+                        round_eval_add_child(spacer,G.round_eval:get_UIE_by_ID(config.bonus and 'bonus_round_eval' or 'base_round_eval'))
                         return true
                     end
                 }))
@@ -1019,7 +1033,7 @@ function add_round_eval_row(config)
                 if config.name == 'blind1' then
                     G.GAME.blind:juice_up()
                 end
-                G.round_eval:add_child(full_row,G.round_eval:get_UIE_by_ID(config.bonus and 'bonus_round_eval' or 'base_round_eval'))
+                round_eval_add_child(full_row,G.round_eval:get_UIE_by_ID(config.bonus and 'bonus_round_eval' or 'base_round_eval'))
                 play_sound('cancel', config.pitch or 1)
                 play_sound('highlight1',( 1.5*config.pitch) or 1, 0.2)
                 if config.card then config.card:juice_up(0.7, 0.46) end
@@ -1032,7 +1046,7 @@ function add_round_eval_row(config)
             G.E_MANAGER:add_event(Event({
                 trigger = 'before',delay = 0.38,
                 func = function()
-                    G.round_eval:add_child(
+                    round_eval_add_child(
                             {n=G.UIT.R, config={align = "cm", id = 'dollar_row_'..(dollar_row+1)..'_'..config.name}, nodes={
                                 {n=G.UIT.O, config={object = DynaText({string = {localize('$')..num_dollars}, colours = {G.C.MONEY}, shadow = true, pop_in = 0, scale = 0.65, float = true})}}
                             }},
@@ -1049,7 +1063,7 @@ function add_round_eval_row(config)
                     trigger = 'before',delay = 0.18 - ((num_dollars > 20 and 0.13) or (num_dollars > 9 and 0.1) or 0),
                     func = function()
                         if i%30 == 1 then 
-                            G.round_eval:add_child(
+                            round_eval_add_child(
                                 {n=G.UIT.R, config={align = "cm", id = 'dollar_row_'..(dollar_row+1)..'_'..config.name}, nodes={}},
                                 G.round_eval:get_UIE_by_ID('dollar_'..config.name))
                                 dollar_row = dollar_row+1
@@ -1062,7 +1076,7 @@ function add_round_eval_row(config)
                             G.GAME.current_round.dollars_to_be_earned = G.GAME.current_round.dollars_to_be_earned:sub(2)
                         end
 
-                        G.round_eval:add_child(r,G.round_eval:get_UIE_by_ID('dollar_row_'..(dollar_row)..'_'..config.name))
+                        round_eval_add_child(r,G.round_eval:get_UIE_by_ID('dollar_row_'..(dollar_row)..'_'..config.name))
                         G.VIBRATION = G.VIBRATION + 0.4
                         return true
                     end

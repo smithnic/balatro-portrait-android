@@ -22,6 +22,8 @@ SCRIPT_DIR = Path(__file__).parent
 
 # Files in this repo that replace their counterparts inside Balatro.exe
 PATCHED_FILES = [
+    "blind.lua",
+    "card.lua",
     "conf.lua",
     "game.lua",
     "globals.lua",

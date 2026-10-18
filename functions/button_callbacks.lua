@@ -1176,13 +1176,18 @@ G.FUNCS.apply_window_changes = function(_initial)
 
   --portrait mode: on mobile SDL locks orientation from these values (non-resizable + w<h = portrait only).
   --The surface may still be landscape at startup (manifest says landscape), so force w<h or we'd lock to landscape.
+  --screen_res comes from the startup (landscape) window, which excludes the system bars; swapped to portrait it is
+  --too short and the viewport leaves a black strip at the top. Use the whole display instead.
   local is_mobile = love.system.getOS() == 'Android' or love.system.getOS() == 'iOS'
-  if is_mobile and window_w > window_h then window_w, window_h = window_h, window_w end
+  if is_mobile then
+    window_w, window_h = love.window.getDesktopDimensions(G.SETTINGS.WINDOW.selected_display)
+    if window_w > window_h then window_w, window_h = window_h, window_w end
+  end
 
   love.window.updateMode(
     window_w,
     window_h,
-    {fullscreen = G.SETTINGS.WINDOW.screenmode ~= 'Windowed',
+    {fullscreen = is_mobile or G.SETTINGS.WINDOW.screenmode ~= 'Windowed',
     fullscreentype = (G.SETTINGS.WINDOW.screenmode == 'Borderless' and 'desktop') or (G.SETTINGS.WINDOW.screenmode == 'Fullscreen' and 'exclusive') or nil,
     vsync = G.SETTINGS.WINDOW.vsync,
     resizable = not is_mobile,
@@ -2152,7 +2157,7 @@ end
     if e.config.ref_table then 
       e.children.info = UIBox{
         definition = {n=G.UIT.ROOT, config = {align = 'cm', colour = G.C.CLEAR, padding = 0.02}, nodes=e.config.ref_table},
-        config = {offset = {x=-0.03,y=0}, align = 'cl', parent = e}
+        config = {offset = {x=(e.config.info_align == 'cr' and 0.03 or -0.03),y=0}, align = e.config.info_align or 'cl', parent = e, lr_clamp = true}
       }
       e.children.info:align_to_major()
       e.config.ref_table = nil
@@ -2532,7 +2537,7 @@ end
           func = function()
             G.blind_prompt_box.alignment.offset.y = -10
             G.blind_select.alignment.offset.y = 40
-            G.blind_select.alignment.offset.x = 0
+            G.blind_select.alignment.offset.x = room_centre_offset_x() --portrait: keep room-centred while sliding out
             return true
         end}))
         G.E_MANAGER:add_event(Event({
@@ -2922,7 +2927,7 @@ G.FUNCS.cash_out = function(e)
       if G.round_eval then  
         e.config.button = nil
         G.round_eval.alignment.offset.y = G.ROOM.T.y + 15
-        G.round_eval.alignment.offset.x = 0
+        G.round_eval.alignment.offset.x = room_centre_offset_x() --portrait: keep room-centred while sliding out
         G.deck:shuffle('cashout'..G.GAME.round_resets.ante)
         G.deck:hard_set_T()
         delay(0.3)

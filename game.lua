@@ -1123,6 +1123,13 @@ function Game:init_window(reset)
     --Initialize the window
     self.ROOM_PADDING_H = 2.0  -- portrait: was 0.7; combined with TILE_W=11.5/TILE_H=20 gives exact 9:16 canvas ratio
     self.ROOM_PADDING_W = 1
+    -- portrait: phones are taller than 9:16, so on mobile stretch the room to the screen's aspect
+    -- instead of leaving empty bands above and below it (HUD stays at the top, hand at the bottom)
+    if love.system.getOS() == 'Android' or love.system.getOS() == 'iOS' then
+        local desk_w, desk_h = love.window.getDesktopDimensions(G.SETTINGS.WINDOW.selected_display)
+        local short_side, long_side = math.min(desk_w, desk_h), math.max(desk_w, desk_h)
+        self.TILE_H = math.max(20, (self.TILE_W + 2*self.ROOM_PADDING_W)*long_side/short_side - 2*self.ROOM_PADDING_H)
+    end
     self.WINDOWTRANS = {
         x = 0, y = 0,
         w = self.TILE_W+2*self.ROOM_PADDING_W, 
@@ -2221,13 +2228,13 @@ function Game:start_run(args)
         discard_H = G.CARD_H,
         deck_W = G.CARD_W,          -- was 1.1; slightly narrower so it fits beside hand
         deck_H = 0.95*G.CARD_H,
-        hand_W = 5.5*G.CARD_W,     -- was 6; leaves room for deck at bottom-right
+        hand_W = 5.0*G.CARD_W,     -- was 6; leaves room for deck at bottom-right
         hand_H = 0.95*G.CARD_H,
         play_W = 5.3*G.CARD_W,     -- restored to original centered value
         play_H = 0.95*G.CARD_H,
-        joker_W = 4.5*G.CARD_W,    -- was 4.9; 5 slots at 0.9x each
+        joker_W = 4.1*G.CARD_W,    -- was 4.9; narrower so the row fits beside consumeables at the larger card size
         joker_H = 0.95*G.CARD_H,
-        consumeable_W = 1.9*G.CARD_W, -- was 2.3; 2 slots at 0.95x each
+        consumeable_W = 1.7*G.CARD_W, -- was 2.3; narrower so the row fits beside jokers at the larger card size
         consumeable_H = 0.95*G.CARD_H
     }
 
@@ -2265,7 +2272,8 @@ function Game:start_run(args)
 
     set_screen_positions()
 
-    G.SPLASH_BACK = Sprite(-30, -6, G.ROOM.T.w+60, G.ROOM.T.h+12, G.ASSET_ATLAS["ui_1"], {x = 2, y = 0})
+    --portrait: centred on G.play, which sits low in the tall room, so it needs to be much taller to reach the top of the screen
+    G.SPLASH_BACK = Sprite(-30, -6, G.ROOM.T.w+60, 2*G.ROOM.T.h+12, G.ASSET_ATLAS["ui_1"], {x = 2, y = 0})
     G.SPLASH_BACK:set_alignment({
         major = G.play,
         type = 'cm',
@@ -2931,6 +2939,9 @@ end
 love.graphics.pop()
     
     love.graphics.setCanvas(G.AA_CANVAS)
+    --The CRT vertex shader tilts the quad toward the cursor, so it doesn't reach the screen edges. Clear first,
+    --otherwise those edge rows keep stale frame contents (visible on Android as copies of the cards).
+    love.graphics.clear(0,0,0,1)
     love.graphics.push()
         love.graphics.setColor(G.C.WHITE)
     if (not G.recording_mode or G.video_control )and true then
@@ -3080,8 +3091,10 @@ function Game:update_shop(dt)
         }
             G.E_MANAGER:add_event(Event({
                 func = function()
-                    G.shop.alignment.offset.y = -5.3
-                    G.shop.alignment.offset.x = 0
+                    --portrait: was -5.3. Raised so the visible shop content (~8.1 tiles; the box itself runs on
+                    --below the screen) ends just above the deck instead of covering View Deck
+                    G.shop.alignment.offset.y = -8.6
+                    G.shop.alignment.offset.x = room_centre_offset_x()
                     G.E_MANAGER:add_event(Event({
                         trigger = 'after',
                         delay = 0.2,
@@ -3285,7 +3298,7 @@ function Game:update_blind_select(dt)
                 }
                 G.blind_select.alignment.offset.y = 0.8-(G.hand.T.y - G.jokers.T.y) + G.blind_select.T.h
                 G.ROOM.jiggle = G.ROOM.jiggle + 3
-                G.blind_select.alignment.offset.x = 0
+                G.blind_select.alignment.offset.x = room_centre_offset_x() --portrait: centre on the room, not the hand
                 G.CONTROLLER.lock_input = false
                 for i = 1, #G.GAME.tags do
                     G.GAME.tags[i]:apply_to_run({type = 'immediate'})
@@ -3316,7 +3329,7 @@ function Game:update_round_eval(dt)
                     definition = create_UIBox_round_evaluation(),
                     config = {align="bm", offset = {x=0,y=G.ROOM.T.y + 19},major = G.hand, bond = 'Weak'}
                 }
-                G.round_eval.alignment.offset.x = 0
+                G.round_eval.alignment.offset.x = room_centre_offset_x() --portrait: centre on the room, not the hand
                 G.E_MANAGER:add_event(Event({
                     trigger = 'immediate',
                     func = function()

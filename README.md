@@ -10,6 +10,8 @@ An unofficial portrait-mode mod for Balatro on Android.
 - Scales cards, jokers, and consumables for comfortable one-handed phone use
 - Repositions the hand, play area, deck, and UI panels to fit a tall screen
 - Tuned for a 412×912 dp screen (e.g. Samsung Galaxy S23 series) but works on similar Android phones
+- Stretches the play area to the phone's aspect ratio, so tall screens are filled edge to edge
+- Keeps card tooltips on screen for cards near the edges
 - Locks the device to portrait (auto-rotate won't flip it into landscape)
 
 ## Prerequisites
@@ -76,6 +78,8 @@ adb install balatro.apk
 ## How the portrait lock works
 
 On Android, LÖVE/SDL picks the screen orientation from the window settings at runtime, overriding the APK manifest. A resizable window allows any rotation. A non-resizable window is locked to portrait or landscape depending on whether its width is less than its height. `conf.lua` and `G.FUNCS.apply_window_changes` (`functions/button_callbacks.lua`) make the window non-resizable on Android/iOS and always pass portrait dimensions.
+
+The window size passed there is the full display size from `love.window.getDesktopDimensions`, swapped to portrait. The game starts in landscape (the manifest says so), and the size LÖVE reports at that point excludes the system bars; reused for the portrait window, it leaves a black strip at the top of the screen.
 
 ## Legal
 
